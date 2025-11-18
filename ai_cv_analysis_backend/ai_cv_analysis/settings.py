@@ -11,40 +11,38 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 import environ
+from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file from project root
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# Load environment using django-environ
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Email configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Use the same Gmail address as sender
 
 FRONTEND_URL = 'http://localhost:5173'
 
-from dotenv import load_dotenv
-load_dotenv()
-
+# OpenAI and API Keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-from decouple import config
-
 GEOAPIFY_KEY = os.getenv("GEOAPIFY_KEY", None)
 
-from pathlib import Path
-from datetime import timedelta
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Load .env file
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -55,7 +53,7 @@ SECRET_KEY = 'django-insecure-z=l44lfke7y%et8v+808)h1g&_#8ps&ndi(3pmbn-$l1$_slpl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -89,10 +87,19 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ai_cv_analysis.urls'
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # change if your Vite port is different
+    "http://localhost:5173",  # Vite dev server
+    "http://127.0.0.1:5173",  # Alternative localhost
 ]
 CORS_ALLOW_HEADERS = [
-    "*",
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -104,6 +111,14 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+# Disable CSRF for API endpoints (development only)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 TEMPLATES = [
     {
@@ -187,7 +202,3 @@ SIMPLE_JWT = {
     # You can also tune the refresh token lifetime if you use refresh tokens:
     # 'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
-
-# OpenAI configuration: read API key from .env and expose globally.
-# Ensure you have OPENAI_API_KEY in your project's .env file at BASE_DIR/.env
-OPENAI_API_KEY = env('OPENAI_API_KEY', default='')

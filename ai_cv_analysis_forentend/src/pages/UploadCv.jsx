@@ -68,27 +68,69 @@ export default function UploadCVPage() {
       if (uploadResponse.status === 201) {
         const newCvId = uploadResponse.data.id;
 
+        // Show upload success message
         setAlert({
           type: "success",
           title: "Upload Successful",
-          message: `✅ CV uploaded successfully! Your CV ID is ${newCvId}. Starting AI analysis...`,
+          message: `✅ CV uploaded successfully! Starting AI analysis...`,
         });
 
-        // Trigger analysis immediately
+        // Wait a moment before triggering analysis to ensure upload is complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Trigger analysis
         try {
+          setAlert({
+            type: "info",
+            title: "Analyzing",
+            message: "🤖 AI is analyzing your CV, please wait...",
+          });
+
           const analysisResponse = await axios.post(
             `${baseURL}/api/cv/cvs/${newCvId}/analyze/`,
             {},
             { headers: { Authorization: `Bearer ${token}` } }
           );
 
-          // Navigate to analysis page with initial analysis data
-          navigate(`/cv-analysis/${newCvId}`, {
-            state: { analysis: analysisResponse.data },
-          });
+          // Check if analysis was successful
+          if (analysisResponse.status === 201 && analysisResponse.data) {
+            setAlert({
+              type: "success",
+              title: "Analysis Complete",
+              message: "✅ CV analyzed successfully! Redirecting...",
+            });
+
+            // Wait a moment to show the success message
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Navigate to analysis page with the analysis data
+            navigate(`/cv-analysis/${newCvId}`, {
+              state: { analysis: analysisResponse.data },
+            });
+          }
         } catch (analyzeError) {
           console.error("Analysis error:", analyzeError);
-          // Still navigate, page will poll until analysis ready
+          
+          // Check if it's a 503 Service Unavailable error
+          if (analyzeError.response?.status === 503) {
+            setAlert({
+              type: "error",
+              title: "Analysis Failed",
+              message: `❌ ${analyzeError.response?.data?.detail || "AI service is temporarily unavailable. Please try analyzing your CV again later."}`,
+            });
+            // Don't navigate - stay on upload page so user can try again
+            return;
+          }
+          
+          // For other errors (e.g., network timeout), navigate and let page poll
+          setAlert({
+            type: "warning",
+            title: "Analysis In Progress",
+            message: "⏳ Analysis is taking longer than expected. Redirecting to analysis page...",
+          });
+          
+          // Wait before navigating
+          await new Promise(resolve => setTimeout(resolve, 1500));
           navigate(`/cv-analysis/${newCvId}`);
         }
       }

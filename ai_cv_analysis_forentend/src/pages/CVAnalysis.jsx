@@ -4,6 +4,7 @@ import axios from "axios";
 import Alert from "../components/Alert";
 import { getInterviewsForCV } from "../components/api/interview";
 import BackButton from "../components/BackButton";
+import JobMap from "../components/JobMap";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,7 +22,10 @@ export default function CVAnalysis() {
 
   // Fetch CV analysis (polling)
   useEffect(() => {
-    if (analysis) return;
+    if (analysis) {
+      setLoading(false);
+      return;
+    }
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -35,6 +39,7 @@ export default function CVAnalysis() {
     }
 
     let pollingInterval = null;
+    let initialFetchDone = false;
 
     const fetchAnalysis = async () => {
       try {
@@ -45,19 +50,40 @@ export default function CVAnalysis() {
 
         if (response.data && response.data.summary) {
           setAnalysis(response.data);
-          clearInterval(pollingInterval);
+          setLoading(false);
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+          }
         }
       } catch (error) {
-        console.error("Error fetching analysis:", error);
-      } finally {
-        setLoading(false);
+        // Only log non-404 errors (404 is expected while analysis is processing)
+        if (error.response?.status !== 404) {
+          console.error("Error fetching analysis:", error);
+        }
+        
+        // If first fetch and we get 404, analysis hasn't been created yet
+        if (!initialFetchDone) {
+          initialFetchDone = true;
+          setLoading(false);
+        }
       }
     };
 
-    fetchAnalysis();
-    pollingInterval = setInterval(fetchAnalysis, 3000);
+    // Add initial delay to give the POST request time to complete
+    const startPolling = () => {
+      fetchAnalysis();
+      pollingInterval = setInterval(fetchAnalysis, 5000); // Poll every 5 seconds
+    };
 
-    return () => clearInterval(pollingInterval);
+    // Wait 1 second before starting to poll
+    const initialTimeout = setTimeout(startPolling, 1000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
   }, [cvId, analysis]);
 
   // Fetch interviews history
@@ -81,19 +107,81 @@ export default function CVAnalysis() {
   if (loading)
     return <p className="text-center mt-20">Loading CV analysis...</p>;
 
+  const handleRetryAnalysis = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setAlert({
+        type: "error",
+        title: "Unauthorized",
+        message: "Please log in to retry analysis.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setAlert(null);
+
+    try {
+      const response = await axios.post(
+        `${baseURL}/api/cv/cvs/${cvId}/analyze/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data) {
+        setAnalysis(response.data);
+        setAlert({
+          type: "success",
+          title: "Success",
+          message: "✅ CV analyzed successfully!",
+        });
+      }
+    } catch (error) {
+      console.error("Retry analysis error:", error);
+      setAlert({
+        type: "error",
+        title: "Analysis Failed",
+        message: `❌ ${error.response?.data?.detail || "Failed to analyze CV. Please try again later."}`,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!analysis)
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-50 to-pink-50">
-        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
-          <p className="text-gray-600 mb-4">
+        <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
+          {alert && (
+            <div className="mb-4">
+              <Alert
+                type={alert.type}
+                title={alert.title}
+                message={alert.message}
+                onClose={() => setAlert(null)}
+              />
+            </div>
+          )}
+          <p className="text-gray-600 mb-6">
             ⚠️ This CV has not been analyzed yet.
           </p>
-          <button
-            onClick={() => navigate("/my-cvs")}
-            className="bg-[#050E7F] text-white py-2 px-6 rounded-full hover:bg-indigo-700 transition"
-          >
-            Back to My CVs
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleRetryAnalysis}
+              disabled={loading}
+              className={`bg-green-600 text-white py-2 px-6 rounded-full hover:bg-green-700 transition ${
+                loading ? "opacity-60 cursor-not-allowed" : ""
+              }`}
+            >
+              {loading ? "Analyzing..." : "🔄 Retry Analysis"}
+            </button>
+            <button
+              onClick={() => navigate("/my-cvs")}
+              className="bg-[#050E7F] text-white py-2 px-6 rounded-full hover:bg-indigo-700 transition"
+            >
+              Back to My CVs
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -201,21 +289,6 @@ export default function CVAnalysis() {
               >
                 Start Interview
               </button>
-
-              {/* FIND JOBS BUTTON (Final Version) */}
-              <button
-                onClick={() =>
-                  navigate("/jobs", {
-                    state: {
-                      selectedCvId: parseInt(cvId),
-                      skills: analysis.skills_extracted,
-                    },
-                  })
-                }
-                className="w-full sm:w-auto bg-[#050E7F] text-white py-2 px-8 rounded-full hover:bg-indigo-700 transition font-medium"
-              >
-                Find Jobs
-              </button>
             </div>
 
             <section className="mb-10 mt-10">
@@ -272,6 +345,24 @@ export default function CVAnalysis() {
                     );
                   })}
               </div>
+            </section>
+
+            <section className="mb-10">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4">
+                🗺️ Find Nearby Companies
+              </h2>
+              <p className="text-gray-600 text-sm mb-4">
+                Discover software houses and tech companies near you where you can apply for jobs.
+              </p>
+              <JobMap 
+                onShowSoftwareHouses={(count) => {
+                  setAlert({
+                    type: "success",
+                    title: "Companies Found",
+                    message: `Found ${count} software houses nearby!`,
+                  });
+                }}
+              />
             </section>
 
             <footer className="text-xs sm:text-sm mt-10 border-t pt-4">

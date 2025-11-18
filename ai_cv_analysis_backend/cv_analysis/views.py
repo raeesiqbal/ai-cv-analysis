@@ -118,10 +118,15 @@ class CVViewSet(viewsets.ModelViewSet):
             analysis_data = openai_analyze_cv(cv)
         except Exception as exc:
             # Print to console and log. Do NOT use hardcoded fallback or create any DB records.
-            print('OpenAI analysis failed:', exc)
+            error_message = str(exc)
+            print('OpenAI analysis failed:', error_message)
             logger = logging.getLogger(__name__)
             logger.exception('OpenAI analysis failed: %s', exc)
-            return Response({'error': 'OpenAI analysis failed'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({
+                'error': 'Failed to analyze CV',
+                'detail': f'AI service error: {error_message}',
+                'cv_id': cv.id
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         # Validate the analysis_data shape before creating a DB record. If the
         # AI returned invalid data, print/log and return an error without

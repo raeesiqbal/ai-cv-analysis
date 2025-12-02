@@ -114,7 +114,7 @@ export default function RegisterForm() {
           {/* Username + Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium ">Username</label>
+              <label className="mb-2 text-sm font-medium ">Username</label>
               <input
                 type="text"
                 placeholder="Username"

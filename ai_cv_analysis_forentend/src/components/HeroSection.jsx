@@ -28,7 +28,7 @@ export default function HeroSection() {
         <img
           src={logo}
           alt="Hero"
-          className="w-4/5 sm:w-3/4 md:w-full max-w-sm md:max-w-lg lg:max-w-xl object-contain"
+          className="w-full md:max-w-xl object-contain"
         />
       </div>
     </section>

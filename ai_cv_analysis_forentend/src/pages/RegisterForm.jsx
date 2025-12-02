@@ -126,7 +126,7 @@ export default function RegisterForm() {
             </div>
 
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium ">Email</label>
+              <label className="mb-2 text-sm font-medium ">Email</label>
               <input
                 type="email"
                 placeholder="Email"
@@ -141,7 +141,7 @@ export default function RegisterForm() {
           {/* First + Last Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">First Name</label>
+              <label className="mb-2 text-sm font-medium">First Name</label>
               <input
                 type="text"
                 placeholder="First Name"
@@ -152,7 +152,7 @@ export default function RegisterForm() {
             </div>
 
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium ">Last Name</label>
+              <label className="mb-2 text-sm font-medium ">Last Name</label>
               <input
                 type="text"
                 placeholder="Last Name"
@@ -166,7 +166,7 @@ export default function RegisterForm() {
           {/* Password + Account Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Password</label>
+              <label className="mb-2 text-sm font-medium">Password</label>
               <input
                 type="password"
                 placeholder="Password"
@@ -178,7 +178,7 @@ export default function RegisterForm() {
             </div>
 
             <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium ">Account Type</label>
+              <label className="mb-2 text-sm font-medium ">Account Type</label>
               <select
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
@@ -193,7 +193,7 @@ export default function RegisterForm() {
 
           {/* LinkedIn + Bio */}
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium ">
+            <label className="mb-2 text-sm font-medium ">
               LinkedIn Profile (optional)
             </label>
             <input
@@ -206,7 +206,7 @@ export default function RegisterForm() {
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium ">Bio (optional)</label>
+            <label className="mb-2 text-sm font-medium ">Bio (optional)</label>
             <textarea
               placeholder="Bio"
               value={bio}
@@ -217,7 +217,7 @@ export default function RegisterForm() {
 
           {/* Profile Picture */}
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium ">Profile Picture</label>
+            <label className="mb-2 text-sm font-medium ">Profile Picture</label>
             <input
               type="file"
               accept="image/*"

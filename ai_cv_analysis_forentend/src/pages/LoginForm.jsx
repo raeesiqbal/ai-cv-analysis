@@ -65,23 +65,23 @@ export default function LoginForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <label className="mb-1 text-sm font-medium">Email</label>
+          <label className=" text-sm font-medium">Email</label>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#050E7F]"
+            className="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#050E7F]"
             required
           />
 
-          <label className="mb-1 text-sm font-medium">Password</label>
+          <label className=" text-sm font-medium">Password</label>
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#050E7F]"
+            className="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#050E7F]"
             required
           />
 
